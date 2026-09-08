@@ -1,0 +1,20 @@
+{
+  "name": "tz-wall-clock",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "description": "Convert a wall-clock time between IANA timezones, with explicit handling of DST gaps and overlaps.",
+  "license": "MIT",
+  "main": "dist/src/convert.js",
+  "bin": {
+    "tz-wall-clock": "dist/src/cli.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "test": "tsc && node --test dist/test"
+  },
+  "devDependencies": {
+    "typescript": "^5.5.4",
+    "@types/node": "^20.14.0"
+  }
+}
