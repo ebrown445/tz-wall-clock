@@ -10,6 +10,11 @@ interface Case {
   status: ResolveStatus;
   expectedWall: string;
   expectedAlternateWall?: string;
+  /** Only asserted when set: zones like London have ICU-version-dependent
+   * short names ("BST" vs "GMT+1"), so most rows leave this unchecked and
+   * only rely on `UTC`/`GMT`, which every ICU build names the same way. */
+  expectedZoneName?: string;
+  expectedAlternateZoneName?: string;
 }
 
 // Every row is a real DST edge case for the year 2026, checked against the
@@ -31,6 +36,7 @@ const cases: Case[] = [
     to: "UTC",
     status: "gap",
     expectedWall: "2026-03-08 07:30",
+    expectedZoneName: "UTC",
   },
   {
     desc: "US spring-forward gap carried through to a second, non-DST-that-day zone",
@@ -39,6 +45,7 @@ const cases: Case[] = [
     to: "Europe/London",
     status: "gap",
     expectedWall: "2026-03-08 07:15",
+    expectedZoneName: "GMT", // London is still on standard time in early March
   },
   {
     desc: "US fall-back overlap (1:30am happens twice)",
@@ -48,6 +55,8 @@ const cases: Case[] = [
     status: "ambiguous",
     expectedWall: "2026-11-01 05:30",
     expectedAlternateWall: "2026-11-01 06:30",
+    expectedZoneName: "UTC",
+    expectedAlternateZoneName: "UTC",
   },
   {
     desc: "EU fall-back overlap on a different transition date/time than the US",
@@ -57,6 +66,8 @@ const cases: Case[] = [
     status: "ambiguous",
     expectedWall: "2026-10-25 00:30",
     expectedAlternateWall: "2026-10-25 01:30",
+    expectedZoneName: "UTC",
+    expectedAlternateZoneName: "UTC",
   },
   {
     desc: "non-hour UTC offset with no DST at all",
@@ -65,6 +76,7 @@ const cases: Case[] = [
     to: "UTC",
     status: "unique",
     expectedWall: "2026-01-01 04:15",
+    expectedZoneName: "UTC",
   },
 ];
 
@@ -73,11 +85,20 @@ for (const c of cases) {
     const result = convertWallTime(c.from, parseWallTime(c.wall), c.to);
     assert.equal(result.status, c.status);
     assert.equal(formatWall(result.wall), c.expectedWall);
+    assert.equal(typeof result.zoneName, "string");
+    assert.ok(result.zoneName.length > 0);
+    if (c.expectedZoneName) {
+      assert.equal(result.zoneName, c.expectedZoneName);
+    }
     if (c.expectedAlternateWall) {
       assert.ok(result.alternateWall, "expected an alternate wall time for an ambiguous result");
       assert.equal(formatWall(result.alternateWall!), c.expectedAlternateWall);
+      if (c.expectedAlternateZoneName) {
+        assert.equal(result.alternateZoneName, c.expectedAlternateZoneName);
+      }
     } else {
       assert.equal(result.alternateWall, undefined);
+      assert.equal(result.alternateZoneName, undefined);
     }
   });
 }

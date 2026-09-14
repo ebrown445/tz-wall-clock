@@ -26,7 +26,7 @@ node dist/src/cli.js "2026-03-08 02:30" America/New_York Europe/London
 ```
 
 ```
-Europe/London: 2026-03-08 07:15
+Europe/London: 2026-03-08 07:15 GMT
 note: 2026-03-08 02:30 does not exist in America/New_York (spring-forward gap); treated as the first valid instant after the gap.
 ```
 
@@ -35,8 +35,8 @@ node dist/src/cli.js "2026-11-01 01:30" America/New_York UTC
 ```
 
 ```
-UTC: 2026-11-01 05:30
-note: 2026-11-01 01:30 occurs twice in America/New_York (fall-back overlap); shown is the earlier instant, the later one converts to 2026-11-01 06:30.
+UTC: 2026-11-01 05:30 UTC
+note: 2026-11-01 01:30 occurs twice in America/New_York (fall-back overlap); shown is the earlier instant (UTC), the later one converts to 2026-11-01 06:30 UTC.
 ```
 
 ### Library
@@ -52,6 +52,7 @@ const result = convertWallTime(
 
 console.log(result.status); // "ambiguous"
 console.log(formatWall(result.wall)); // the earlier instant, in Berlin's local time
+console.log(result.zoneName); // the named offset Berlin uses at that instant, e.g. "CET"
 console.log(result.alternateWall && formatWall(result.alternateWall)); // the later one
 ```
 

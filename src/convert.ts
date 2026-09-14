@@ -29,7 +29,11 @@ export interface ConversionResult {
   wall: WallTime;
   utc: number;
   status: ResolveStatus;
+  /** Named offset the target zone uses at `utc`, e.g. "EDT" or "GMT+5:45". */
+  zoneName: string;
   alternateWall?: WallTime;
+  /** Named offset the target zone uses at `alternateUtc`, for ambiguous results. */
+  alternateZoneName?: string;
 }
 
 const DAY_MS = 24 * 60 * 60 * 1000;
@@ -66,6 +70,22 @@ function zonedFields(timeZone: string, instant: number): WallTime {
     minute: get("minute"),
     second: get("second"),
   };
+}
+
+/**
+ * The named offset a zone displays at a given instant, e.g. "EDT", "GMT",
+ * or "GMT+5:45" for zones ICU has no abbreviation for. Falls back to the
+ * zone's numeric offset if the "short" form doesn't resolve to a name (some
+ * ICU builds return the zone id itself in that case).
+ */
+function zoneAbbreviation(timeZone: string, instant: number): string {
+  const dtf = new Intl.DateTimeFormat("en-US", {
+    timeZone,
+    timeZoneName: "short",
+    hour: "2-digit",
+  });
+  const part = dtf.formatToParts(new Date(instant)).find((p) => p.type === "timeZoneName");
+  return part ? part.value : timeZone;
 }
 
 function offsetMinutesAt(timeZone: string, instant: number): number {
@@ -131,9 +151,11 @@ export function convertWallTime(fromZone: string, wall: WallTime, toZone: string
     wall: zonedFields(toZone, resolved.utc),
     utc: resolved.utc,
     status: resolved.status,
+    zoneName: zoneAbbreviation(toZone, resolved.utc),
   };
   if (resolved.status === "ambiguous" && resolved.alternateUtc !== undefined) {
     result.alternateWall = zonedFields(toZone, resolved.alternateUtc);
+    result.alternateZoneName = zoneAbbreviation(toZone, resolved.alternateUtc);
   }
   return result;
 }

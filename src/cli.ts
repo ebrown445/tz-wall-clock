@@ -19,7 +19,7 @@ function main(argv: string[]): number {
     const wall = parseWallTime(datetime);
     const result = convertWallTime(fromZone, wall, toZone);
 
-    process.stdout.write(`${toZone}: ${formatWall(result.wall)}\n`);
+    process.stdout.write(`${toZone}: ${formatWall(result.wall)} ${result.zoneName}\n`);
 
     if (result.status === "gap") {
       process.stdout.write(
@@ -30,7 +30,8 @@ function main(argv: string[]): number {
     if (result.status === "ambiguous" && result.alternateWall) {
       process.stdout.write(
         `note: ${datetime} occurs twice in ${fromZone} (fall-back overlap); ` +
-          `shown is the earlier instant, the later one converts to ${formatWall(result.alternateWall)}.\n`
+          `shown is the earlier instant (${result.zoneName}), the later one converts to ` +
+          `${formatWall(result.alternateWall)} ${result.alternateZoneName}.\n`
       );
     }
     return 0;
