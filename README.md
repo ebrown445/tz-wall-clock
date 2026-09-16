@@ -39,6 +39,13 @@ UTC: 2026-11-01 05:30 UTC
 note: 2026-11-01 01:30 occurs twice in America/New_York (fall-back overlap); shown is the earlier instant (UTC), the later one converts to 2026-11-01 06:30 UTC.
 ```
 
+To see the IANA zone names your runtime recognizes (useful for spelling one
+correctly before you type it):
+
+```
+node dist/src/cli.js --list-zones
+```
+
 ### Library
 
 ```ts

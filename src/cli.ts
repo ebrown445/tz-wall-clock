@@ -4,11 +4,19 @@ import { convertWallTime, formatWall, parseWallTime } from "./convert.js";
 function usage(): string {
   return (
     'usage: tz-wall-clock "<YYYY-MM-DD HH:MM>" <from-zone> <to-zone>\n' +
-    'example: tz-wall-clock "2026-03-08 02:30" America/New_York Europe/London\n'
+    'example: tz-wall-clock "2026-03-08 02:30" America/New_York Europe/London\n' +
+    "       tz-wall-clock --list-zones\n"
   );
 }
 
 function main(argv: string[]): number {
+  if (argv[0] === "--list-zones") {
+    for (const zone of Intl.supportedValuesOf("timeZone")) {
+      process.stdout.write(`${zone}\n`);
+    }
+    return 0;
+  }
+
   const [datetime, fromZone, toZone] = argv;
   if (!datetime || !fromZone || !toZone) {
     process.stderr.write(usage());
