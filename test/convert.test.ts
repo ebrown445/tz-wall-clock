@@ -1,6 +1,12 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { convertWallTime, formatWall, parseWallTime, type ResolveStatus } from "../src/convert.js";
+import {
+  convertWallTime,
+  formatWall,
+  parseWallTime,
+  resolveZoneName,
+  type ResolveStatus,
+} from "../src/convert.js";
 
 interface Case {
   desc: string;
@@ -111,4 +117,35 @@ test("parseWallTime rejects malformed input", () => {
 test("parseWallTime accepts an explicit seconds field", () => {
   const wall = parseWallTime("2026-03-08 02:30:45");
   assert.equal(wall.second, 45);
+});
+
+test("resolveZoneName passes IANA names and UTC through unchanged", () => {
+  assert.equal(resolveZoneName("America/New_York"), "America/New_York");
+  assert.equal(resolveZoneName("UTC"), "UTC");
+});
+
+test("resolveZoneName maps an unambiguous abbreviation to its IANA zone", () => {
+  assert.equal(resolveZoneName("EST"), "America/New_York");
+  assert.equal(resolveZoneName("edt"), "America/New_York");
+  assert.equal(resolveZoneName("BST"), "Europe/London");
+  assert.equal(resolveZoneName("GMT"), "UTC");
+});
+
+test("resolveZoneName rejects an abbreviation used by more than one region", () => {
+  assert.throws(() => resolveZoneName("CST"), /ambiguous/);
+  assert.throws(() => resolveZoneName("IST"), /ambiguous/);
+});
+
+test("resolveZoneName leaves unrecognized input alone for Intl to reject", () => {
+  assert.equal(resolveZoneName("NotAZone"), "NotAZone");
+});
+
+test("convertWallTime accepts zone abbreviations end to end", () => {
+  const result = convertWallTime(
+    resolveZoneName("EST"),
+    parseWallTime("2026-01-15 09:00"),
+    resolveZoneName("GMT")
+  );
+  assert.equal(result.status, "unique");
+  assert.equal(formatWall(result.wall), "2026-01-15 14:00");
 });

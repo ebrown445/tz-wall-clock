@@ -38,6 +38,69 @@ export interface ConversionResult {
 
 const DAY_MS = 24 * 60 * 60 * 1000;
 
+/**
+ * Common non-IANA zone abbreviations, mapped to the canonical IANA zone that
+ * defines their offset and DST rules (the zone handles both the standard and
+ * daylight forms itself, e.g. America/New_York covers both EST and EDT).
+ *
+ * Abbreviations that more than one region uses in everyday speech (CST, IST)
+ * are deliberately mapped to a list instead of a single zone, so
+ * resolveZoneName refuses to guess. That matches the whole point of this
+ * tool: don't silently pick an answer when the input is genuinely ambiguous.
+ */
+const ZONE_ABBREVIATIONS: Record<string, string | string[]> = {
+  GMT: "UTC",
+  EST: "America/New_York",
+  EDT: "America/New_York",
+  CDT: "America/Chicago",
+  MST: "America/Denver",
+  MDT: "America/Denver",
+  PST: "America/Los_Angeles",
+  PDT: "America/Los_Angeles",
+  BST: "Europe/London",
+  CET: "Europe/Paris",
+  CEST: "Europe/Paris",
+  EET: "Europe/Athens",
+  EEST: "Europe/Athens",
+  MSK: "Europe/Moscow",
+  JST: "Asia/Tokyo",
+  KST: "Asia/Seoul",
+  AEST: "Australia/Sydney",
+  AEDT: "Australia/Sydney",
+  ACST: "Australia/Adelaide",
+  ACDT: "Australia/Adelaide",
+  AWST: "Australia/Perth",
+  NZST: "Pacific/Auckland",
+  NZDT: "Pacific/Auckland",
+  CST: ["America/Chicago", "Asia/Shanghai"],
+  IST: ["Asia/Kolkata", "Asia/Jerusalem", "Europe/Dublin"],
+};
+
+/**
+ * Accepts either an IANA zone name (passed through unchanged, including
+ * "UTC" and zones Intl recognizes that this table doesn't know about) or a
+ * common zone abbreviation, which is resolved to its canonical IANA zone.
+ * Throws if the abbreviation is one that different regions use for different
+ * zones, since guessing which one the caller meant would be worse than
+ * asking them to be specific.
+ */
+export function resolveZoneName(input: string): string {
+  const trimmed = input.trim();
+  if (trimmed.includes("/") || trimmed.toUpperCase() === "UTC") {
+    return trimmed;
+  }
+  const candidate = ZONE_ABBREVIATIONS[trimmed.toUpperCase()];
+  if (candidate === undefined) {
+    return trimmed;
+  }
+  if (Array.isArray(candidate)) {
+    throw new Error(
+      `"${trimmed}" is ambiguous between ${candidate.join(" and ")}; use the full IANA zone name instead`
+    );
+  }
+  return candidate;
+}
+
 function wallTimeAsUtcMs(w: WallTime): number {
   return Date.UTC(w.year, w.month - 1, w.day, w.hour, w.minute, w.second);
 }

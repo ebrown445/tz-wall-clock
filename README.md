@@ -46,6 +46,18 @@ correctly before you type it):
 node dist/src/cli.js --list-zones
 ```
 
+`from-zone` and `to-zone` also accept common abbreviations (`EST`, `PDT`,
+`CET`, `JST`, ...) as a shorthand for the IANA zone that defines them:
+
+```
+node dist/src/cli.js "2026-03-08 02:30" EST BST
+```
+
+Abbreviations that different regions use for different zones (`CST` means
+both US Central and China Standard Time; `IST` means India, Israel, or
+Ireland) are rejected rather than guessed at - spell out the IANA zone
+instead.
+
 ### Library
 
 ```ts
@@ -66,6 +78,11 @@ console.log(result.alternateWall && formatWall(result.alternateWall)); // the la
 `resolveWallTime(timeZone, wall)` does the underlying work: it returns the
 best UTC instant for a wall-clock time in a single zone, along with a
 `status` of `"unique"`, `"ambiguous"`, or `"gap"`.
+
+`resolveZoneName(input)` turns a zone abbreviation into its IANA name (or
+passes an IANA name through unchanged), throwing if the abbreviation is
+ambiguous. `convertWallTime` and `resolveWallTime` both expect an IANA name,
+so call it on any user-supplied zone first.
 
 ## How it works
 
