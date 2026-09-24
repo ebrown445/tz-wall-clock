@@ -58,6 +58,22 @@ both US Central and China Standard Time; `IST` means India, Israel, or
 Ireland) are rejected rather than guessed at - spell out the IANA zone
 instead.
 
+Add `--json` to get a single JSON object on stdout instead of the text
+above, for scripting:
+
+```
+node dist/src/cli.js "2026-11-01 01:30" America/New_York UTC --json
+```
+
+```json
+{"input":"2026-11-01 01:30","from":"America/New_York","to":"UTC","status":"ambiguous","wall":"2026-11-01 05:30","zoneName":"UTC","alternateWall":"2026-11-01 06:30","alternateZoneName":"UTC","note":"2026-11-01 01:30 occurs twice in America/New_York (fall-back overlap); shown is the earlier instant (UTC), the later one converts to 2026-11-01 06:30 UTC."}
+```
+
+`alternateWall`, `alternateZoneName`, and `note` are `null` for a unique
+result. On failure (bad input, unresolvable zone) the process exits 1 and
+prints `{"error": "..."}` instead. `--list-zones --json` prints the zone
+list as a JSON array rather than one name per line.
+
 ### Library
 
 ```ts
